@@ -1,0 +1,208 @@
+Coding Challenge 1 - Product View Analysis
+-------------------------------------------
+
+
+import pandas as pd
+from collections import defaultdict
+import argparse
+import logging
+from typing import Set, Dict, List, Tuple
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+
+def validate_columns(df: pd.DataFrame, required_columns: Set[str]) -> None:
+    """Validate that all required columns are present in the DataFrame."""
+    missing = required_columns - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing one or more required columns: {missing}")
+
+
+def load_and_prepare_data(csv_file_path: str) -> pd.DataFrame:
+    """Load CSV file and prepare DataFrame by stripping column names."""
+    try:
+        df = pd.read_csv(csv_file_path)
+        df.columns = df.columns.str.strip()
+        logging.info("Loaded data with columns: %s", df.columns.tolist())
+        return df
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {csv_file_path}")
+    except pd.errors.ParserError:
+        raise ValueError(f"Error parsing the CSV file: {csv_file_path}")
+
+
+def group_product_views(df: pd.DataFrame) -> pd.DataFrame:
+    """Group product views by Parent org and Brand."""
+    return df.groupby(['Parent org', 'Brand'])['Product View Count'].sum().reset_index()
+
+
+def calculate_parent_totals(grouped_df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate total product views per Parent org."""
+    return grouped_df.groupby('Parent org')['Product View Count'].sum().reset_index().sort_values(
+        by='Product View Count', ascending=False
+    )
+
+
+def build_brand_map(grouped_df: pd.DataFrame) -> Dict[str, List[Tuple[str, int]]]:
+    """Create a mapping of Parent org to its Brands and their view counts."""
+    org_brand_map = defaultdict(list)
+    for _, row in grouped_df.iterrows():
+        org_brand_map[row['Parent org']].append(
+            (row['Brand'], row['Product View Count']))
+    return org_brand_map
+
+
+def format_report(parent_totals: pd.DataFrame, brand_map: Dict[str, List[Tuple[str, int]]]) -> str:
+    """Generate a formatted report as a string."""
+    report_lines = []
+    for _, parent_row in parent_totals.iterrows():
+        parent_org = parent_row['Parent org']
+        total_views = parent_row['Product View Count']
+        report_lines.append(f"{parent_org} : {total_views}")
+        brands_sorted = sorted(
+            brand_map[parent_org], key=lambda x: x[1], reverse=True)
+        for brand, count in brands_sorted:
+            report_lines.append(f" {brand} : {count}")
+        report_lines.append("")  # Blank line between parent orgs
+    return "\n".join(report_lines)
+
+
+def analyze_product_views(csv_file_path: str) -> None:
+    """Main function to analyze product views from a CSV file."""
+    required_columns = {'Parent org', 'Brand', 'Product View Count'}
+    df = load_and_prepare_data(csv_file_path)
+    validate_columns(df, required_columns)
+    grouped_views = group_product_views(df)
+    parent_totals = calculate_parent_totals(grouped_views)
+    brand_map = build_brand_map(grouped_views)
+    report = format_report(parent_totals, brand_map)
+    print(report)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Analyze product views from a CSV file.")
+    parser.add_argument("csv_path", help="Path to the input CSV file")
+    args = parser.parse_args()
+    try:
+        analyze_product_views(args.csv_path)
+    except Exception as e:
+        logging.error(e)
+
+
+if __name__ == "__main__":
+    main()
+
+Command to run the product view analysis:python coding1.py "C:\Users\lenovo\OneDrive\Desktop\Divya\Product View Analysis - Sheet1.csv"
+----------------------------------------
+
+Output
+--------
+INFO: Loaded data with columns: ['Date', 'Parent org', 'Brand', 'Product Id', 'Product View Count']
+loreal_org : 917991
+ lorealparis : 721216
+ maybelline : 92812
+ garnier : 81104
+ cheryls : 11993
+ lorealprofessionnel : 9420
+ matrix : 1445
+ kerastase : 1
+
+unilever_org : 584380
+ horlicks : 141732
+ lipton : 97514
+ dove : 75977
+ kwalitywalls : 74739
+ vaseline : 52472
+ redlabel : 38176
+ ponds : 29368
+ cornetto : 18261
+ boost : 9836
+ surfexcel : 8266
+ sunsilk : 7069
+ closeup : 5831
+ knorr : 5406
+ kissan : 5325
+ rexona : 4335
+ smartpick : 4123
+ bru : 1917
+ comfort : 1557
+ magnum : 1329
+ moti : 995
+ axe : 152
+
+mamaearth_org : 113660
+ mamaearth : 113660
+
+hersheys_org : 111932
+ kisses : 62521
+ hersheysexoticdark : 49363
+ hersheys : 32
+ sofit : 16
+
+nestle_org : 18803
+ maggi : 10797
+ nescafe : 2613
+ milkmaid : 2499
+ ceregrow : 1500
+ lactogrow : 754
+ nangrow : 518
+ maggispicemix : 29
+ nestle : 27
+ maggirecipe : 25
+ milo : 19
+ asknestle : 18
+ everyday : 2
+ nestleprofessional : 2
+
+itc_org : 18576
+ aashirvaadnaturessuperfoods : 17830
+ aashirvaadmultigrain : 253
+ savlon : 184
+ aashirvaad : 105
+ aashirvaadselect : 77
+ itcmasterchefcookingpastes : 50
+ itcmasterchefbasegravies : 20
+ aashirvaadnaturessuperfoodsorganic : 18
+ aashirvaadinstantmeals : 15
+ aashirvaadinstantmixes : 15
+ sunbean : 7
+ fiama : 2
+
+mondelez_org : 17457
+ cadburybournville : 13711
+ cadburyfuse : 3746
+
+mondelezinternational_org : 15398
+ cadburyfuse : 9190
+ cadburybournville : 6208
+
+godrej_org : 14191
+ hit : 12451
+ goodknight : 1039
+ ezee : 326
+ protekt : 318
+ genteel : 57
+
+gsk_org : 4045
+ sensodyne : 4045
+
+colgatepalmolive_org : 3358
+ colgate : 3015
+ palmolive : 343
+
+kcl_org : 814
+ huggies : 814
+
+kimberlyclark_org : 691
+ huggies : 691
+
+shortlyst_org : 515
+ shortlyst : 515
+
+cipla_org : 64
+ mamaxpert : 64
+
+oceanssecret_org : 3
+ oceanssecret : 3

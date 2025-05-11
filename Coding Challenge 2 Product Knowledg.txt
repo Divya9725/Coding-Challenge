@@ -1,0 +1,370 @@
+Coding Challenge 2 Product Knowledge Graph API
+-----------------------------------------------
+
+import requests
+import sys
+import logging
+
+# Set up logging for easier debugging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+# Constant for the API URL base
+API_URL_BASE = "https://dev.shopalyst.com/shopalyst-service/v1/products/"
+
+
+def fetch_product_details(product_id: str) -> dict:
+    """Fetch product details from Shopalyst API and return the raw data."""
+    url = f"{API_URL_BASE}{product_id}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Check if the request was successful
+        product_data = response.json()  # Parse JSON data
+        return product_data
+    except requests.exceptions.RequestException as e:
+        logging.error(
+            f"Failed to fetch product data for product_id {product_id}: {e}")
+        raise  # Reraise the exception for higher-level handling
+
+
+def extract_sku_details_from_response(product_data: dict) -> list:
+    """Extract SKU details from the product data response."""
+    sku_details = []
+
+    # Look for the key containing SKU data (attributeValues is where SKU-related info is stored)
+    attribute_values = product_data.get("attributeValues", [])
+
+    # Loop through each attribute value to extract SKU details
+    for item in attribute_values:
+        sku_id = item.get("id", "N/A")
+        shade = item.get("value", "N/A")
+        title = item.get("title", "N/A")
+        # Offer price is not found in this response, you may need to fetch it elsewhere
+        offer_price = "N/A"  # Replace with real offer price if available in response
+
+        # Store the SKU details in a list of dictionaries
+        sku_details.append({
+            "skuId": sku_id,
+            "shade": shade,
+            "offerPrice": offer_price,
+            "title": title
+        })
+
+    return sku_details
+
+
+def display_sku_details(sku_details: list) -> None:
+    """Display SKU details in the required format."""
+    if not sku_details:
+        logging.warning("No SKU details found in the response.")
+        return
+
+    # Loop through the SKUs and print details
+    product_counter = 1  # To track Product number (Product 1, Product 2, etc.)
+    for sku in sku_details:
+        sku_id = sku.get("skuId", "N/A")
+        shade = sku.get("shade", "N/A")
+        offer_price = sku.get("offerPrice", "N/A")
+        title = sku.get("title", "N/A")
+
+        # Printing output in the required format
+        print("--------------------------")
+        print(f"Product {product_counter}")
+        print(f"skuId : {sku_id}")
+        print(f"shade : {shade}")
+        print(f"offerPrice : {offer_price}")
+        print(f"title : {title}")
+        print()  # Blank line between products
+        product_counter += 1  # Increment the product counter
+
+
+def main():
+    if len(sys.argv) < 2:
+        logging.error("Usage: python coding2.py <product_id>")
+        sys.exit(1)
+
+    product_id = sys.argv[1]
+    try:
+        product_data = fetch_product_details(product_id)
+        sku_details = extract_sku_details_from_response(product_data)
+        display_sku_details(sku_details)
+    except Exception as e:
+        logging.error(
+            f"Error occurred while processing product ID {product_id}: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+
+
+Command to run the Product Knowledge Graph API:python coding2.py 929323BCA2A04A74961E0043E9A55B60
+----------------------------------------------
+
+
+Output
+-------
+--------------------------
+Product 1
+skuId : MR21 Brick Blush
+shade : MR21 Brick Blush
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR21 Brick Blush
+
+--------------------------
+Product 2
+skuId : MR22 Scarlet Surge
+shade : MR22 Scarlet Surge
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR22 Scarlet Surge
+
+--------------------------
+Product 3
+skuId : MR5 Roseate Motive
+shade : MR5 Roseate Motive
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR5 Roseate Motive
+
+--------------------------
+Product 4
+skuId : MB3 Brownie Point
+shade : MB3 Brownie Point
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB3 Brownie Point
+
+--------------------------
+Product 5
+skuId : MR19 Crimson Cue
+shade : MR19 Crimson Cue
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR19 Crimson Cue
+
+--------------------------
+Product 6
+skuId : Orchid Dust MM11
+shade : Orchid Dust MM11
+offerPrice : N/A
+title : Lakme 9 To 5 Matte Lip Color - Orchid Dust MM11
+
+--------------------------
+Product 7
+skuId : Rose Bliss MM13
+shade : Rose Bliss MM13
+offerPrice : N/A
+title : Lakme 9 To 5 Matte Lip Color - Rose Bliss MM13
+
+--------------------------
+Product 8
+skuId : Red Rust
+shade : Red Rust
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - Red Rust
+
+--------------------------
+Product 9
+skuId : Sangria Weekend
+shade : Sangria Weekend
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - Sangria Weekend
+
+--------------------------
+Product 10
+skuId : Garnet Punch
+shade : Garnet Punch
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - Garnet Punch
+
+--------------------------
+Product 11
+skuId : Pink Party
+shade : Pink Party
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - Pink Party
+
+--------------------------
+Product 12
+skuId : MR18 Maroon Mix
+shade : MR18 Maroon Mix
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR18 Maroon Mix
+
+--------------------------
+Product 13
+skuId : MR20 Ruby Rush
+shade : MR20 Ruby Rush
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR20 Ruby Rush
+
+--------------------------
+Product 14
+skuId : MP19 Blush Book
+shade : MP19 Blush Book
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP19 Blush Book
+
+--------------------------
+Product 15
+skuId : MP17 Rosy Mind
+shade : MP17 Rosy Mind
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP17 Rosy Mind
+
+--------------------------
+Product 16
+skuId : MR11 Berry Base
+shade : MR11 Berry Base
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR11 Berry Base
+
+--------------------------
+Product 17
+skuId : MP21 Fuchsia File
+shade : MP21 Fuchsia File
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP21 Fuchsia File
+
+--------------------------
+Product 18
+skuId : MB11 Espresso Shot
+shade : MB11 Espresso Shot
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB11 Espresso Shot
+
+--------------------------
+Product 19
+skuId : MB13 Caramel Cut
+shade : MB13 Caramel Cut
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB13 Caramel Cut
+
+--------------------------
+Product 20
+skuId : Rosy Lips MP25
+shade : Rosy Lips MP25
+offerPrice : N/A
+title : Lakme 9 To 5 Matte Lip Color - Rosy Lips MP25
+
+--------------------------
+Product 21
+skuId : MP20 Pink Post
+shade : MP20 Pink Post
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP20 Pink Post
+
+--------------------------
+Product 22
+skuId : MB12 Choco Break
+shade : MB12 Choco Break
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB12 Choco Break
+
+--------------------------
+Product 23
+skuId : MR4 Cherry Chic
+shade : MR4 Cherry Chic
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR4 Cherry Chic
+
+--------------------------
+Product 24
+skuId : LC MR1 Red Coat
+shade : LC MR1 Red Coat
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - LC MR1 Red Coat
+
+--------------------------
+Product 25
+skuId : MR12 Crimson Catch
+shade : MR12 Crimson Catch
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR12 Crimson Catch
+
+--------------------------
+Product 26
+skuId : MR10 Red Rebel
+shade : MR10 Red Rebel
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR10 Red Rebel
+
+--------------------------
+Product 27
+skuId : MP18 Plum Pick
+shade : MP18 Plum Pick
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP18 Plum Pick
+
+--------------------------
+Product 28
+skuId : MB14 Maple Map
+shade : MB14 Maple Map
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB14 Maple Map
+
+--------------------------
+Product 29
+skuId : Coral Date
+shade : Coral Date
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - Coral Date
+
+--------------------------
+Product 30
+skuId : Blushing Nude
+shade : Blushing Nude
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - Blushing Nude
+
+--------------------------
+Product 31
+skuId : MP7 Rosy Sunday
+shade : MP7 Rosy Sunday
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP7 Rosy Sunday
+
+--------------------------
+Product 32
+skuId : MP16 Pink Perfect
+shade : MP16 Pink Perfect
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MP16 Pink Perfect
+
+--------------------------
+Product 33
+skuId : MB9 Cabernet Category
+shade : MB9 Cabernet Category
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB9 Cabernet Category
+
+--------------------------
+Product 34
+skuId : MB1 Coffee Command
+shade : MB1 Coffee Command
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MB1 Coffee Command
+
+--------------------------
+Product 35
+skuId : MR9 Red Letter
+shade : MR9 Red Letter
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR9 Red Letter
+
+--------------------------
+Product 36
+skuId : MR8 Orange Edge
+shade : MR8 Orange Edge
+offerPrice : N/A
+title : Lakme 9 to 5 Primer + Matte Lip Color - MR8 Orange Edge
+
+--------------------------
+Product 37
+skuId : Nude Touch MP24
+shade : Nude Touch MP24
+offerPrice : N/A
+title : Lakme 9 To 5 Matte Lip Color - Nude Touch MP24
+
+--------------------------
+Product 38
+skuId : Mauve Matter MM12
+shade : Mauve Matter MM12
+offerPrice : N/A
+title : Lakme 9 To 5 Matte Lip Color - Mauve Matter MM12
